@@ -135,7 +135,6 @@ class Scanner(val source: String) {
         val text = source.substring(start, current)
         val type = keywords[text] ?: IDENTIFIER
         addToken(type)
-        addToken(IDENTIFIER)
     }
 
     companion object {
