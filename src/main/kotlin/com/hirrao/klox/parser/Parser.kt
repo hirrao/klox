@@ -10,12 +10,38 @@ class Parser(val tokens: List<Token>) {
     private class ParseError : RuntimeException()
 
     private var current = 0
-    private fun expression() = equality()
+    private fun expression() = comma()
 
     fun parse() = try {
         expression()
     } catch (_: ParseError) {
         Expr.None()
+    }
+
+    private fun comma(): Expr {
+        var expr = ternary()
+
+        while (match(COMMA)) {
+            val operator = previous()
+            val right = ternary()
+            expr = Expr.Binary(expr, operator, right)
+        }
+        return expr
+    }
+
+    private fun ternary(): Expr {
+        var expr = equality()
+
+        while (match(QUESTION)) {
+            val operator = previous()
+            val medium = expression()
+
+            consume(COLON, "Expect ':' after expression.")
+
+            val right = ternary()
+            expr = Expr.Ternary(expr, operator, medium, right)
+        }
+        return expr
     }
 
     private fun equality(): Expr {

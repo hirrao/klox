@@ -10,9 +10,11 @@ enum class TokenType {
     DOT,
     MINUS,
     PLUS,
+    COLON,
     SEMICOLON,
     SLASH,
     STAR,
+    QUESTION,
 
     // 多字符Token
     BANG,
