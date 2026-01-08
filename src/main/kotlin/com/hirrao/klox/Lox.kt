@@ -1,6 +1,7 @@
 package com.hirrao.klox
 
 import com.hirrao.klox.scanner.Scanner
+
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.nio.charset.Charset

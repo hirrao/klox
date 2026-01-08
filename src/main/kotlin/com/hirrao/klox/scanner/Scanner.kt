@@ -59,16 +59,18 @@ class Scanner(val source: String) {
             ' ', '\r', '\t' -> Unit
             '\n' -> line++
             else -> {
-                if (c.isDigit()) number()
-                else if (c.isAlpha()) identifier()
-                else Lox.error(line, "Unexpected character. $c")
+                if (c.isDigit()) {
+                    number()
+                } else if (c.isAlpha()) {
+                    identifier()
+                } else {
+                    Lox.error(line, "Unexpected character. $c")
+                }
             }
         }
     }
 
-    private fun isAtEnd(): Boolean {
-        return current >= source.length
-    }
+    private fun isAtEnd(): Boolean = current >= source.length
 
     private fun advance(): Char {
         current++
@@ -154,7 +156,7 @@ class Scanner(val source: String) {
             "this" to THIS,
             "true" to TRUE,
             "var" to VAR,
-            "while" to WHILE
+            "while" to WHILE,
         )
     }
 }

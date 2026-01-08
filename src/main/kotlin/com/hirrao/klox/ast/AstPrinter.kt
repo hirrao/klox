@@ -4,7 +4,6 @@ import com.hirrao.klox.token.Token
 import com.hirrao.klox.token.TokenType
 
 object AstPrinter {
-
     fun printAst(expr: Expr): String = when (expr) {
         is Expr.Binary -> parenthesize(expr.operator.lexeme, expr.left, expr.right)
         is Expr.Call -> TODO()
@@ -19,16 +18,16 @@ object AstPrinter {
         is Expr.Variable -> TODO()
     }
 
-    private fun parenthesize(name: String, vararg exprs: Expr): String {
-        return "($name ${exprs.map(::printAst).reduce { acc, expr -> "$acc $expr" }})"
-    }
+    private fun parenthesize(name: String, vararg exprs: Expr): String =
+        "($name ${exprs.map(::printAst).reduce { acc, expr -> "$acc $expr" }})"
 }
 
 fun main() {
-    val expression = Expr.Binary(
-        Expr.Unary(Token(TokenType.MINUS, "-", null, 1), Expr.Literal(123)),
-        Token(TokenType.STAR, "*", null, 1),
-        Expr.Grouping(Expr.Literal(45.67))
-    )
+    val expression =
+        Expr.Binary(
+            Expr.Unary(Token(TokenType.MINUS, "-", null, 1), Expr.Literal(123)),
+            Token(TokenType.STAR, "*", null, 1),
+            Expr.Grouping(Expr.Literal(45.67)),
+        )
     println(AstPrinter.printAst(expression))
 }
