@@ -92,7 +92,7 @@ class Parser(val tokens: List<Token>) {
         throw error(peek(), "Expect expression.")
     }
 
-    private fun match(vararg types: TokenType?): Boolean {
+    private fun match(vararg types: TokenType): Boolean {
         for (type in types) {
             if (check(type)) {
                 advance()
@@ -109,9 +109,9 @@ class Parser(val tokens: List<Token>) {
         throw error(peek(), message)
     }
 
-    private fun check(type: TokenType?): Boolean {
+    private fun check(type: TokenType): Boolean {
         if (isAtEnd()) return false
-        return peek().type === type
+        return peek().type == type
     }
 
     private fun advance(): Token {
@@ -119,7 +119,7 @@ class Parser(val tokens: List<Token>) {
         return previous()
     }
 
-    private fun isAtEnd() = peek().type === EOF
+    private fun isAtEnd() = peek().type == EOF
 
     private fun peek() = tokens[current]
 
