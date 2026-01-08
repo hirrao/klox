@@ -1,10 +1,12 @@
 package com.hirrao.klox.ast
 
 import com.hirrao.klox.token.Token
-import com.hirrao.klox.token.TokenType
+import com.hirrao.klox.token.TokenType.MINUS
+import com.hirrao.klox.token.TokenType.STAR
 
 object AstPrinter {
     fun printAst(expr: Expr): String = when (expr) {
+        is Expr.None -> "none"
         is Expr.Binary -> parenthesize(expr.operator.lexeme, expr.left, expr.right)
         is Expr.Call -> TODO()
         is Expr.Get -> TODO()
@@ -25,8 +27,8 @@ object AstPrinter {
 fun main() {
     val expression =
         Expr.Binary(
-            Expr.Unary(Token(TokenType.MINUS, "-", null, 1), Expr.Literal(123)),
-            Token(TokenType.STAR, "*", null, 1),
+            Expr.Unary(Token(MINUS, "-", null, 1), Expr.Literal(123)),
+            Token(STAR, "*", null, 1),
             Expr.Grouping(Expr.Literal(45.67)),
         )
     println(AstPrinter.printAst(expression))

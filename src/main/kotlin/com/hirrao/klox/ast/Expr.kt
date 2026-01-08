@@ -3,6 +3,8 @@ package com.hirrao.klox.ast
 import com.hirrao.klox.token.Token
 
 sealed class Expr {
+    class None : Expr()
+
     class Binary(val left: Expr, val operator: Token, val right: Expr) : Expr()
 
     class Call(val callee: Expr, val paran: Token, val argument: List<Expr>) : Expr()
