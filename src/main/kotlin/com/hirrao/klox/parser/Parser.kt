@@ -15,7 +15,7 @@ class Parser(val tokens: List<Token>) {
     fun parse() = try {
         expression()
     } catch (_: ParseError) {
-        Expr.None()
+        Expr.None
     }
 
     private fun comma(): Expr {
