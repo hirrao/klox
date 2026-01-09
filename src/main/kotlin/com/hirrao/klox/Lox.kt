@@ -1,6 +1,7 @@
 package com.hirrao.klox
 
-import com.hirrao.klox.ast.AstPrinter
+import com.hirrao.klox.interpreter.Interpreter
+import com.hirrao.klox.interpreter.LoxRuntimeError
 import com.hirrao.klox.parser.Parser
 import com.hirrao.klox.scanner.Scanner
 import com.hirrao.klox.token.Token
@@ -15,11 +16,13 @@ import kotlin.system.exitProcess
 
 object Lox {
     var hadError = false
+    var hadRuntimeError = false
 
     fun runFile(path: String) {
         val bytes = Files.readAllBytes(Paths.get(path))
         run(String(bytes, Charset.defaultCharset()))
         if (hadError) exitProcess(65)
+        if (hadRuntimeError) exitProcess(70)
     }
 
     fun runPrompt() {
@@ -39,7 +42,7 @@ object Lox {
         val parser = Parser(tokens)
         val expression = parser.parse()
         if (hadError) return
-        println(AstPrinter.printAst(expression))
+        Interpreter.interpret(expression)
     }
 
     fun error(line: Int, message: String) {
@@ -57,5 +60,10 @@ object Lox {
     private fun report(line: Int, where: String, message: String) {
         println("[line $line] Error $where: $message")
         hadError = true
+    }
+
+    fun runtimeError(error: LoxRuntimeError) {
+        System.err.println("${error.message}\n [line ${error.token.line}]")
+        hadRuntimeError = true
     }
 }
