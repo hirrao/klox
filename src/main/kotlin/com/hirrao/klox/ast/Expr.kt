@@ -5,7 +5,7 @@ import com.hirrao.klox.token.Token
 sealed class Expr {
     object None : Expr()
 
-    class Assign(val name: Token, val value: Expr): Expr()
+    class Assign(val name: Token, val value: Expr) : Expr()
 
     class Binary(val left: Expr, val operator: Token, val right: Expr) : Expr()
 

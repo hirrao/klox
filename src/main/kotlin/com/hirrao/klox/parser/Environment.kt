@@ -12,9 +12,13 @@ class Environment(val enclosing: Environment? = null) {
     }
 
     operator fun set(name: Token, value: Any?) {
-        if (values.containsKey(name.lexeme)) values[name.lexeme] = value
-        else if (enclosing != null) enclosing[name] = value
-        else throw LoxRuntimeError(name, "Undefined variable '${name.lexeme}'.")
+        if (values.containsKey(name.lexeme)) {
+            values[name.lexeme] = value
+        } else if (enclosing != null) {
+            enclosing[name] = value
+        } else {
+            throw LoxRuntimeError(name, "Undefined variable '${name.lexeme}'.")
+        }
     }
 
     fun define(name: String, value: Any?) {

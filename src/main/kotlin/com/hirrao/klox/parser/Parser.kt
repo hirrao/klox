@@ -7,7 +7,6 @@ import com.hirrao.klox.token.Token
 import com.hirrao.klox.token.TokenType
 import com.hirrao.klox.token.TokenType.*
 
-
 class Parser(val tokens: List<Token>) {
     private class ParseError : RuntimeException()
 
@@ -23,8 +22,11 @@ class Parser(val tokens: List<Token>) {
     }
 
     private fun declaration() = try {
-        if (match(VAR)) varDeclaration()
-        else statement()
+        if (match(VAR)) {
+            varDeclaration()
+        } else {
+            statement()
+        }
     } catch (error: ParseError) {
         synchronize()
         Stmt.None
@@ -67,7 +69,7 @@ class Parser(val tokens: List<Token>) {
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
             statements.add(declaration())
         }
-        consume(RIGHT_BRACE,"Expect '}' after block.")
+        consume(RIGHT_BRACE, "Expect '}' after block.")
         return statements
     }
 
