@@ -3,6 +3,7 @@ package com.hirrao.klox.ast
 import com.hirrao.klox.token.Token
 
 sealed class Stmt {
+    object None : Stmt()
     class Block(val statements: List<Stmt>) : Stmt()
     class Class(val name: Token, val superclass: Expr.Variable, val methods: List<Function>) : Stmt()
     class Expression(val expression: Expr) : Stmt()
@@ -10,6 +11,6 @@ sealed class Stmt {
     class If(val condition: Expr, val thenBranch: Stmt, val elseBranch: Stmt) : Stmt()
     class Print(val expression: Expr) : Stmt()
     class Return(val keyword: Token, val value: Expr) : Stmt()
-    class Var(val name: Token, val initializer: Expr) : Stmt()
+    class Var(val name: Token, val initializer: Expr?) : Stmt()
     class While(val condition: Expr, val body: Stmt) : Stmt()
 }

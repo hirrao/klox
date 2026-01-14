@@ -2,20 +2,89 @@ package com.hirrao.klox.parser
 
 import com.hirrao.klox.Lox
 import com.hirrao.klox.ast.Expr
+import com.hirrao.klox.ast.Stmt
 import com.hirrao.klox.token.Token
 import com.hirrao.klox.token.TokenType
 import com.hirrao.klox.token.TokenType.*
+
 
 class Parser(val tokens: List<Token>) {
     private class ParseError : RuntimeException()
 
     private var current = 0
-    private fun expression() = comma()
+    private fun expression() = assignment()
 
-    fun parse() = try {
-        expression()
-    } catch (_: ParseError) {
-        Expr.None
+    fun parse(): List<Stmt> {
+        val statements: MutableList<Stmt> = ArrayList()
+        while (!isAtEnd()) {
+            statements.add(declaration())
+        }
+        return statements
+    }
+
+    private fun declaration() = try {
+        if (match(VAR)) varDeclaration()
+        else statement()
+    } catch (error: ParseError) {
+        synchronize()
+        Stmt.None
+    }
+
+    private fun statement(): Stmt {
+        if (match(PRINT)) return printStatement()
+        if (match(LEFT_BRACE)) return Stmt.Block(block())
+
+        return expressionStatement()
+    }
+
+    private fun varDeclaration(): Stmt {
+        val name = consume(IDENTIFIER, "Expect variable name.")
+
+        val initializer = if (match(EQUAL)) {
+            expression()
+        } else {
+            null
+        }
+
+        consume(SEMICOLON, "Expect ';' after variable declaration.")
+        return Stmt.Var(name, initializer)
+    }
+
+    private fun printStatement(): Stmt {
+        val value = expression()
+        consume(SEMICOLON, "Expect ';' after value.")
+        return Stmt.Print(value)
+    }
+
+    private fun expressionStatement(): Stmt {
+        val expr = expression()
+        consume(SEMICOLON, "Expect ';' after expression.")
+        return Stmt.Expression(expr)
+    }
+
+    private fun block(): List<Stmt> {
+        val statements: MutableList<Stmt> = ArrayList()
+        while (!check(RIGHT_BRACE) && !isAtEnd()) {
+            statements.add(declaration())
+        }
+        consume(RIGHT_BRACE,"Expect '}' after block.")
+        return statements
+    }
+
+    private fun assignment(): Expr {
+        val expr = comma()
+        if (match(EQUAL)) {
+            val equals = previous()
+            val value = assignment()
+
+            if (expr is Expr.Variable) {
+                val name = expr.name
+                return Expr.Assign(name, value)
+            }
+
+            error(equals, "Invalid assignment target.")
+        }
+        return expr
     }
 
     private fun comma(): Expr {
@@ -109,6 +178,8 @@ class Parser(val tokens: List<Token>) {
         if (match(NUMBER, STRING)) {
             return Expr.Literal(previous().literal)
         }
+
+        if (match(IDENTIFIER)) return Expr.Variable(previous())
 
         if (match(LEFT_PAREN)) {
             val expr = expression()

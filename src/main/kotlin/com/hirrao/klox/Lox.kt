@@ -17,6 +17,7 @@ import kotlin.system.exitProcess
 object Lox {
     var hadError = false
     var hadRuntimeError = false
+    val interpreter = Interpreter()
 
     fun runFile(path: String) {
         val bytes = Files.readAllBytes(Paths.get(path))
@@ -40,9 +41,9 @@ object Lox {
         val scanner = Scanner(source)
         val tokens = scanner.scanTokens()
         val parser = Parser(tokens)
-        val expression = parser.parse()
+        val statements = parser.parse()
         if (hadError) return
-        Interpreter.interpret(expression)
+        interpreter.interpret(statements)
     }
 
     fun error(line: Int, message: String) {
