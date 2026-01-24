@@ -43,7 +43,9 @@ expression     -> comma ;
 comma          -> assignment ( "," assignment )* ;
 
 assignment     -> ( call "." )? IDENTIFIER "=" assignment
-| logic_or ;
+| ternary ;
+
+ternary        -> logic_or ( "?" expression ":" ternary )?
 
 logic_or       -> logic_and ( "or" logic_and )* ;
 logic_and      -> equality ( "and" equality )* ;
