@@ -27,29 +27,26 @@ class Parser(val tokens: List<Token>) {
         } else {
             statement()
         }
-    } catch (error: ParseError) {
+    } catch (_: ParseError) {
         synchronize()
         Stmt.None
     }
 
     private fun statement(): Stmt {
+        if (match(IF)) return ifStatement()
         if (match(PRINT)) return printStatement()
         if (match(LEFT_BRACE)) return Stmt.Block(block())
 
         return expressionStatement()
     }
 
-    private fun varDeclaration(): Stmt {
-        val name = consume(IDENTIFIER, "Expect variable name.")
-
-        val initializer = if (match(EQUAL)) {
-            expression()
-        } else {
-            null
-        }
-
-        consume(SEMICOLON, "Expect ';' after variable declaration.")
-        return Stmt.Var(name, initializer)
+    private fun ifStatement(): Stmt {
+        consume(LEFT_PAREN, "Expect '(' after 'if'.")
+        val condition = expression()
+        consume(RIGHT_PAREN, "Expect ')' after if condition.")
+        val thenBranch = statement()
+        val elseBranch = if (match(ELSE)) statement() else null
+        return Stmt.If(condition, thenBranch, elseBranch)
     }
 
     private fun printStatement(): Stmt {
@@ -73,8 +70,22 @@ class Parser(val tokens: List<Token>) {
         return statements
     }
 
+    private fun varDeclaration(): Stmt {
+        val name = consume(IDENTIFIER, "Expect variable name.")
+
+        val initializer = if (match(EQUAL)) {
+            expression()
+        } else {
+            null
+        }
+
+        consume(SEMICOLON, "Expect ';' after variable declaration.")
+        return Stmt.Var(name, initializer)
+    }
+
     private fun assignment(): Expr {
         val expr = comma()
+
         if (match(EQUAL)) {
             val equals = previous()
             val value = assignment()

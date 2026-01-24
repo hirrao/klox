@@ -89,7 +89,7 @@ class Interpreter {
                 }
 
                 BANG -> {
-                    !((right as? Boolean) ?: (right != null))
+                    right.isTruthy()
                 }
 
                 else -> null
@@ -131,6 +131,14 @@ class Interpreter {
                 }
             }
 
+            is Stmt.If -> {
+                if (evaluate(stmt.condition).isTruthy()) {
+                    execute(stmt.thenBranch)
+                } else if (stmt.elseBranch != null) {
+                    execute(stmt.elseBranch)
+                }
+            }
+
             else -> TODO()
         }
     }
@@ -139,5 +147,11 @@ class Interpreter {
         for (i in operand) {
             if (i !is Double) throw LoxRuntimeError(operator, "Operand must be a number.")
         }
+    }
+
+    private fun Any?.isTruthy(): Boolean = when (this) {
+        null -> false
+        is Boolean -> this
+        else -> true
     }
 }
