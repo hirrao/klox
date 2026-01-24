@@ -4,7 +4,6 @@ import com.hirrao.klox.token.Token
 import com.hirrao.klox.token.TokenType.MINUS
 import com.hirrao.klox.token.TokenType.STAR
 
-@Deprecated("Finished")
 object AstPrinter {
     fun printAst(expr: Expressions): String = when (expr) {
         is Expressions.Binary -> parenthesize(expr.operator.lexeme, expr.left, expr.right)
