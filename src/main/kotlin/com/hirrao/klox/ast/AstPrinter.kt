@@ -4,32 +4,26 @@ import com.hirrao.klox.token.Token
 import com.hirrao.klox.token.TokenType.MINUS
 import com.hirrao.klox.token.TokenType.STAR
 
+@Deprecated("Finished")
 object AstPrinter {
-    fun printAst(expr: Expr): String = when (expr) {
-        is Expr.Binary -> parenthesize(expr.operator.lexeme, expr.left, expr.right)
-        is Expr.Call -> TODO()
-        is Expr.Get -> TODO()
-        is Expr.Grouping -> parenthesize("Group", expr.expression)
-        is Expr.Literal -> expr.value?.toString() ?: "nil"
-        is Expr.Logical -> TODO()
-        is Expr.Set -> TODO()
-        is Expr.Super -> TODO()
-        is Expr.This -> TODO()
-        is Expr.Unary -> parenthesize(expr.operator.lexeme, expr.right)
-        is Expr.Ternary -> parenthesize(expr.operator.lexeme, expr.left, expr.medium, expr.right)
-        is Expr.Variable -> TODO()
+    fun printAst(expr: Expressions): String = when (expr) {
+        is Expressions.Binary -> parenthesize(expr.operator.lexeme, expr.left, expr.right)
+        is Expressions.Grouping -> parenthesize("Group", expr.expression)
+        is Expressions.Literal -> expr.value?.toString() ?: "nil"
+        is Expressions.Unary -> parenthesize(expr.operator.lexeme, expr.right)
+        is Expressions.Ternary -> parenthesize(expr.operator.lexeme, expr.left, expr.medium, expr.right)
         else -> TODO()
     }
 
-    private fun parenthesize(name: String, vararg exprs: Expr): String =
+    private fun parenthesize(name: String, vararg exprs: Expressions): String =
         "($name ${exprs.map(::printAst).reduce { acc, expr -> "$acc $expr" }})"
 }
 
 fun main() {
-    val expression = Expr.Binary(
-        Expr.Unary(Token(MINUS, "-", null, 1), Expr.Literal(123)),
+    val expression = Expressions.Binary(
+        Expressions.Unary(Token(MINUS, "-", null, 1), Expressions.Literal(123)),
         Token(STAR, "*", null, 1),
-        Expr.Grouping(Expr.Literal(45.67)),
+        Expressions.Grouping(Expressions.Literal(45.67)),
     )
     println(AstPrinter.printAst(expression))
 }

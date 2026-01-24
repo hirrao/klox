@@ -1,8 +1,8 @@
 package com.hirrao.klox.interpreter
 
 import com.hirrao.klox.Lox
-import com.hirrao.klox.ast.Expr
-import com.hirrao.klox.ast.Stmt
+import com.hirrao.klox.ast.Expressions
+import com.hirrao.klox.ast.Statements
 import com.hirrao.klox.parser.Environment
 import com.hirrao.klox.token.Token
 import com.hirrao.klox.token.TokenType.*
@@ -12,7 +12,7 @@ import kotlin.math.floor
 class Interpreter {
     var environment = Environment()
 
-    fun interpret(statements: List<Stmt>) {
+    fun interpret(statements: List<Statements>) {
         try {
             statements.forEach { execute(it) }
         } catch (error: LoxRuntimeError) {
@@ -20,14 +20,19 @@ class Interpreter {
         }
     }
 
-    private fun stringify(obj: Any?) = when (obj) {
+    private fun Any?.stringify() = when (this) {
         null -> "nil"
-        is Double -> if (floor(obj) == obj) obj.toInt().toString() else obj.toString()
-        else -> obj.toString()
+        is Double -> if (floor(this) == this) this.toInt().toString() else this.toString()
+        else -> this.toString()
     }
 
-    fun evaluate(expr: Expr): Any? = when (expr) {
-        is Expr.Binary -> {
+    fun evaluate(expr: Expressions): Any? = when (expr) {
+        is Expressions.Assign -> {
+            val value = evaluate(expr.value)
+            environment[expr.name] = value
+            return value
+        }
+        is Expressions.Binary -> {
             val left = evaluate(expr.left)
             val right = evaluate(expr.right)
             when (expr.operator.type) {
@@ -77,10 +82,9 @@ class Interpreter {
                 else -> null
             }
         }
-
-        is Expr.Grouping -> evaluate(expr.expression)
-        is Expr.Literal -> expr.value
-        is Expr.Unary -> {
+        is Expressions.Grouping -> evaluate(expr.expression)
+        is Expressions.Literal -> expr.value
+        is Expressions.Unary -> {
             val right = evaluate(expr.right)
             when (expr.operator.type) {
                 MINUS -> {
@@ -95,48 +99,39 @@ class Interpreter {
                 else -> null
             }
         }
+        is Expressions.Variable -> environment[expr.name]
 
-        is Expr.Variable -> environment[expr.name]
-        is Expr.Assign -> {
-            val value = evaluate(expr.value)
-            environment[expr.name] = value
-            return value
-        }
-
-        else -> null
+        else -> TODO()
     }
 
-    fun execute(stmt: Stmt) {
-        when (stmt) {
-            is Stmt.Expression -> evaluate(stmt.expression)
-            is Stmt.Print -> {
-                val obj = evaluate(stmt.expression)
-                println(stringify(obj))
-            }
-
-            is Stmt.Var -> {
-                val value = if (stmt.initializer != null) evaluate(stmt.initializer) else null
-                environment.define(stmt.name.lexeme, value)
-            }
-
-            is Stmt.Block -> {
+    fun execute(statement: Statements) {
+        when (statement) {
+            is Statements.Block -> {
                 val previous = this.environment
                 try {
                     this.environment = Environment(environment)
-                    stmt.statements.forEach {
+                    statement.statements.forEach {
                         execute(it)
                     }
                 } finally {
                     this.environment = previous
                 }
             }
-
-            is Stmt.If -> {
-                if (evaluate(stmt.condition).isTruthy()) {
-                    execute(stmt.thenBranch)
-                } else if (stmt.elseBranch != null) {
-                    execute(stmt.elseBranch)
+            is Statements.Expression -> evaluate(statement.expression)
+            is Statements.If -> {
+                if (evaluate(statement.condition).isTruthy()) {
+                    execute(statement.thenBranch)
+                } else if (statement.elseBranch != null) {
+                    execute(statement.elseBranch)
                 }
+            }
+            is Statements.Print -> {
+                val obj = evaluate(statement.expression)
+                println(obj.stringify())
+            }
+            is Statements.Var -> {
+                val value = if (statement.initializer != null) evaluate(statement.initializer) else null
+                environment.define(statement.name.lexeme, value)
             }
 
             else -> TODO()
