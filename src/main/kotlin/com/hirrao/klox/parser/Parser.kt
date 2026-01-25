@@ -50,11 +50,11 @@ class Parser(val tokens: List<Token>) {
     private fun statement(): Statements {
         if (match(IF)) return ifStatement()
         if (match(PRINT)) return printStatement()
+        if (match(WHILE)) return whileStatement()
+        if (match(FOR)) return forStatement()
         if (match(LEFT_BRACE)) return Statements.Block(block())
         /*
-        if (match(FOR)) return forStatement()
         if (match(RETURN)) return returnStatement()
-        if (match(WHILE)) return whileStatement()
          */
         return expressionStatement()
     }
@@ -72,6 +72,43 @@ class Parser(val tokens: List<Token>) {
         val value = expression()
         consume(SEMICOLON, "Expect ';' after value.")
         return Statements.Print(value)
+    }
+
+    private fun whileStatement(): Statements {
+        consume(LEFT_PAREN, "Expect '(' after 'while'.")
+        val condition = expression()
+        consume(RIGHT_PAREN, "Expect ')' after condition.")
+        val body = statement()
+        return Statements.While(condition, body)
+    }
+
+    private fun forStatement(): Statements {
+        consume(LEFT_PAREN, "Expect '(' after 'for'.")
+        val initializer = if (match(SEMICOLON)) {
+            null
+        } else if (match(VAR)) {
+            varDeclaration()
+        } else {
+            expressionStatement()
+        }
+        val condition = if (!check(SEMICOLON)) expression() else Expressions.Literal(true)
+        consume(SEMICOLON, "Expect ';' after loop condition.")
+        val increment = if (!check(RIGHT_PAREN)) expression() else null
+        consume(RIGHT_PAREN, "Expect ')' after for clauses.")
+        val body = Statements.While(
+            condition,
+            if (increment != null) {
+                Statements.Block(listOf(statement(), Statements.Expression(increment)))
+            } else {
+                statement()
+            },
+        )
+        val statement = if (initializer != null) {
+            Statements.Block(listOf(initializer, body))
+        } else {
+            body
+        }
+        return statement
     }
 
     private fun block(): List<Statements> {

@@ -26,82 +26,96 @@ class Interpreter {
         else -> this.toString()
     }
 
-    fun evaluate(expr: Expressions): Any? = when (expr) {
-        is Expressions.Assign -> {
-            val value = evaluate(expr.value)
-            environment[expr.name] = value
-            return value
-        }
-        is Expressions.Binary -> {
-            val left = evaluate(expr.left)
-            val right = evaluate(expr.right)
-            when (expr.operator.type) {
-                MINUS -> {
-                    checkNumberOperand(expr.operator, left, right)
-                    left as Double - right as Double
-                }
-
-                SLASH -> {
-                    checkNumberOperand(expr.operator, left, right)
-                    left as Double / right as Double
-                }
-
-                STAR -> {
-                    checkNumberOperand(expr.operator, left, right)
-                    left as Double * right as Double
-                }
-
-                PLUS -> when (left) {
-                    is Double if right is Double -> left + right
-                    is String if right is String -> left + right
-                    else -> throw LoxRuntimeError(expr.operator, "Operands must be two numbers or two strings.")
-                }
-
-                GREATER -> {
-                    checkNumberOperand(expr.operator, left, right)
-                    left as Double > right as Double
-                }
-
-                GREATER_EQUAL -> {
-                    checkNumberOperand(expr.operator, left, right)
-                    left as Double >= right as Double
-                }
-
-                LESS -> {
-                    checkNumberOperand(expr.operator, left, right)
-                    (left as Double) < right as Double
-                }
-
-                LESS_EQUAL -> {
-                    checkNumberOperand(expr.operator, left, right)
-                    left as Double <= right as Double
-                }
-
-                BANG_EQUAL -> left != right
-                EQUAL_EQUAL -> left == right
-                else -> null
+    fun evaluate(expr: Expressions): Any? {
+        when (expr) {
+            is Expressions.Assign -> {
+                val value = evaluate(expr.value)
+                environment[expr.name] = value
+                return value
             }
-        }
-        is Expressions.Grouping -> evaluate(expr.expression)
-        is Expressions.Literal -> expr.value
-        is Expressions.Unary -> {
-            val right = evaluate(expr.right)
-            when (expr.operator.type) {
-                MINUS -> {
-                    checkNumberOperand(expr.operator, right)
-                    -(right as Double)
-                }
 
-                BANG -> {
-                    right.isTruthy()
-                }
+            is Expressions.Binary -> {
+                val left = evaluate(expr.left)
+                val right = evaluate(expr.right)
+                return when (expr.operator.type) {
+                    MINUS -> {
+                        checkNumberOperand(expr.operator, left, right)
+                        left as Double - right as Double
+                    }
 
-                else -> null
+                    SLASH -> {
+                        checkNumberOperand(expr.operator, left, right)
+                        left as Double / right as Double
+                    }
+
+                    STAR -> {
+                        checkNumberOperand(expr.operator, left, right)
+                        left as Double * right as Double
+                    }
+
+                    PLUS -> when (left) {
+                        is Double if right is Double -> left + right
+                        is String if right is String -> left + right
+                        else -> throw LoxRuntimeError(expr.operator, "Operands must be two numbers or two strings.")
+                    }
+
+                    GREATER -> {
+                        checkNumberOperand(expr.operator, left, right)
+                        left as Double > right as Double
+                    }
+
+                    GREATER_EQUAL -> {
+                        checkNumberOperand(expr.operator, left, right)
+                        left as Double >= right as Double
+                    }
+
+                    LESS -> {
+                        checkNumberOperand(expr.operator, left, right)
+                        (left as Double) < right as Double
+                    }
+
+                    LESS_EQUAL -> {
+                        checkNumberOperand(expr.operator, left, right)
+                        left as Double <= right as Double
+                    }
+
+                    BANG_EQUAL -> left != right
+                    EQUAL_EQUAL -> left == right
+                    else -> null
+                }
             }
-        }
-        is Expressions.Variable -> environment[expr.name]
 
-        else -> TODO()
+            is Expressions.Grouping -> return evaluate(expr.expression)
+            is Expressions.Literal -> return expr.value
+            is Expressions.Logical -> {
+                val left = evaluate(expr.left)
+                when (expr.operator.type) {
+                    OR -> if (expr.left.isTruthy()) return left
+                    else -> if (!expr.left.isTruthy()) return left
+                }
+                return evaluate(expr.right)
+            }
+
+            is Expressions.Unary -> {
+                val right = evaluate(expr.right)
+                return when (expr.operator.type) {
+                    MINUS -> {
+                        checkNumberOperand(expr.operator, right)
+                        -(right as Double)
+                    }
+
+                    BANG -> {
+                        right.isTruthy()
+                    }
+
+                    else -> null
+                }
+            }
+
+            is Expressions.Variable -> return environment[expr.name]
+
+            else -> TODO()
+        }
     }
 
     fun execute(statement: Statements) {
@@ -132,6 +146,11 @@ class Interpreter {
             is Statements.Var -> {
                 val value = if (statement.initializer != null) evaluate(statement.initializer) else null
                 environment.define(statement.name.lexeme, value)
+            }
+            is Statements.While -> {
+                while (evaluate(statement.condition).isTruthy()) {
+                    execute(statement.body)
+                }
             }
 
             else -> TODO()
