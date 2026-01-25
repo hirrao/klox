@@ -1,9 +1,9 @@
 package com.hirrao.klox.parser
 
 import com.hirrao.klox.Lox
+import com.hirrao.klox.interpreter.MAX_PARAMETERS
 import com.hirrao.klox.syntax.Expressions
 import com.hirrao.klox.syntax.Statements
-import com.hirrao.klox.interpreter.MAX_PARAMETERS
 import com.hirrao.klox.token.Token
 import com.hirrao.klox.token.TokenType
 import com.hirrao.klox.token.TokenType.*
