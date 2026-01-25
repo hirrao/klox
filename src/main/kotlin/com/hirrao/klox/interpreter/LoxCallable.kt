@@ -1,0 +1,8 @@
+package com.hirrao.klox.interpreter
+
+const val MAX_PARAMETERS = 32
+
+interface LoxCallable {
+    val arity: Int
+    fun call(interpreter: Interpreter, arguments: List<Any?>): Any?
+}

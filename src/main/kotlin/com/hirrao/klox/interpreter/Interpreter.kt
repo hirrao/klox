@@ -1,8 +1,8 @@
 package com.hirrao.klox.interpreter
 
 import com.hirrao.klox.Lox
-import com.hirrao.klox.ast.Expressions
-import com.hirrao.klox.ast.Statements
+import com.hirrao.klox.syntax.Expressions
+import com.hirrao.klox.syntax.Statements
 import com.hirrao.klox.parser.Environment
 import com.hirrao.klox.token.Token
 import com.hirrao.klox.token.TokenType.*
@@ -10,7 +10,19 @@ import com.hirrao.klox.token.TokenType.*
 import kotlin.math.floor
 
 class Interpreter {
-    var environment = Environment()
+    val globals = Environment()
+    private var environment = globals
+    init {
+        globals.define(
+            "clock",
+            object : LoxCallable {
+                override val arity = 0
+                override fun call(interpreter: Interpreter, arguments: List<Any?>) =
+                    System.currentTimeMillis().toDouble() / 1000.0
+                override fun toString() = "<native fn>"
+            },
+        )
+    }
 
     fun interpret(statements: List<Statements>) {
         try {
@@ -86,6 +98,24 @@ class Interpreter {
                 }
             }
 
+            is Expressions.Call -> {
+                val callee = evaluate(expr.callee)
+                val arguments = expr.arguments.map { evaluate(it) }
+                val function = callee as? LoxCallable
+                    ?: throw LoxRuntimeError(
+                        expr.paren,
+                        "Can only call functions and classes.",
+                    )
+                if (arguments.size !=
+                    function.arity
+                ) {
+                    throw LoxRuntimeError(
+                        expr.paren,
+                        "Expected ${function.arity} arguments but got ${arguments.size}.",
+                    )
+                }
+                return function.call(this, arguments)
+            }
             is Expressions.Grouping -> return evaluate(expr.expression)
             is Expressions.Literal -> return expr.value
             is Expressions.Logical -> {

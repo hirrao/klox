@@ -1,4 +1,4 @@
-package com.hirrao.klox.ast
+package com.hirrao.klox.syntax
 
 import com.hirrao.klox.token.Token
 
@@ -6,7 +6,7 @@ sealed class Expressions {
     object None : Expressions()
     class Assign(val name: Token, val value: Expressions) : Expressions()
     class Binary(val left: Expressions, val operator: Token, val right: Expressions) : Expressions()
-    class Call(val callee: Expressions, val param: Token, val argument: List<Expressions>) : Expressions()
+    class Call(val callee: Expressions, val paren: Token, val arguments: List<Expressions>) : Expressions()
     class Get(val obj: Expressions, val name: Token) : Expressions()
     class Grouping(val expression: Expressions) : Expressions()
     class Literal(val value: Any?) : Expressions()

@@ -1,8 +1,9 @@
 package com.hirrao.klox.parser
 
 import com.hirrao.klox.Lox
-import com.hirrao.klox.ast.Expressions
-import com.hirrao.klox.ast.Statements
+import com.hirrao.klox.syntax.Expressions
+import com.hirrao.klox.syntax.Statements
+import com.hirrao.klox.interpreter.MAX_PARAMETERS
 import com.hirrao.klox.token.Token
 import com.hirrao.klox.token.TokenType
 import com.hirrao.klox.token.TokenType.*
@@ -231,7 +232,34 @@ class Parser(val tokens: List<Token>) {
             val right = unary()
             return Expressions.Unary(operator, right)
         }
-        return primary()
+        return call()
+    }
+
+    private fun call(): Expressions {
+        var expr = primary()
+        while (true) {
+            if (match(LEFT_PAREN)) {
+                expr = finishCall(expr)
+            } else {
+                break
+            }
+        }
+        return expr
+    }
+
+    private fun finishCall(callee: Expressions): Expressions {
+        val arguments: MutableList<Expressions> = ArrayList()
+        if (!check(RIGHT_PAREN)) {
+            do {
+                if (arguments.size >= MAX_PARAMETERS) {
+                    error(peek(), "Can't have more than $MAX_PARAMETERS arguments.")
+                }
+                arguments.add(expression())
+            } while (match(COMMA))
+        }
+
+        val paren = consume(RIGHT_PAREN, "Expect ')' after arguments.")
+        return Expressions.Call(callee, paren, arguments)
     }
 
     private fun primary(): Expressions {

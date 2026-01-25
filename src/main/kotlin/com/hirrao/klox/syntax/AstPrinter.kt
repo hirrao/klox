@@ -1,4 +1,4 @@
-package com.hirrao.klox.ast
+package com.hirrao.klox.syntax
 
 import com.hirrao.klox.token.Token
 import com.hirrao.klox.token.TokenType.MINUS
