@@ -81,6 +81,7 @@ class Interpreter {
 
                     BANG_EQUAL -> left != right
                     EQUAL_EQUAL -> left == right
+                    COMMA -> right
                     else -> null
                 }
             }
@@ -96,6 +97,10 @@ class Interpreter {
                 return evaluate(expr.right)
             }
 
+            is Expressions.Ternary -> {
+                val left = evaluate(expr.left)
+                return if (left.isTruthy()) evaluate(expr.medium) else evaluate(expr.right)
+            }
             is Expressions.Unary -> {
                 val right = evaluate(expr.right)
                 return when (expr.operator.type) {
