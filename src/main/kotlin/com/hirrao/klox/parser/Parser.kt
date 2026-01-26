@@ -50,7 +50,6 @@ class Parser(val tokens: List<Token>) {
     // 解析语句部分
     private fun statement(): Statements {
         if (match(IF)) return ifStatement()
-        if (match(PRINT)) return printStatement()
         if (match(WHILE)) return whileStatement()
         if (match(FOR)) return forStatement()
         if (match(LEFT_BRACE)) return Statements.Block(block())
@@ -67,12 +66,6 @@ class Parser(val tokens: List<Token>) {
         val thenBranch = statement()
         val elseBranch = if (match(ELSE)) statement() else null
         return Statements.If(condition, thenBranch, elseBranch)
-    }
-
-    private fun printStatement(): Statements {
-        val value = expression()
-        consume(SEMICOLON, "Expect ';' after value.")
-        return Statements.Print(value)
     }
 
     private fun whileStatement(): Statements {
@@ -321,7 +314,7 @@ class Parser(val tokens: List<Token>) {
         while (!isAtEnd()) {
             if (previous().type == SEMICOLON) return
             when (peek().type) {
-                CLASS, FUN, VAR, FOR, IF, WHILE, PRINT, RETURN -> return
+                CLASS, FUN, VAR, FOR, IF, WHILE, RETURN -> return
                 else -> Unit
             }
             advance()

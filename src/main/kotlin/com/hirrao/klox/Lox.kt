@@ -1,5 +1,6 @@
 package com.hirrao.klox
 
+import com.hirrao.klox.initializer.initNativeFunctions
 import com.hirrao.klox.interpreter.Interpreter
 import com.hirrao.klox.interpreter.LoxRuntimeError
 import com.hirrao.klox.parser.Parser
@@ -18,6 +19,9 @@ object Lox {
     var hadError = false
     var hadRuntimeError = false
     val interpreter = Interpreter()
+    init {
+        interpreter.initNativeFunctions()
+    }
 
     fun runFile(path: String) {
         val bytes = Files.readAllBytes(Paths.get(path))

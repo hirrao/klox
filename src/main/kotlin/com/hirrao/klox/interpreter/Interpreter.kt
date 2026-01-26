@@ -7,22 +7,9 @@ import com.hirrao.klox.syntax.Statements
 import com.hirrao.klox.token.Token
 import com.hirrao.klox.token.TokenType.*
 
-import kotlin.math.floor
-
 class Interpreter {
     val globals = Environment()
     private var environment = globals
-    init {
-        globals.define(
-            "clock",
-            object : LoxCallable {
-                override val arity = 0
-                override fun call(interpreter: Interpreter, arguments: List<Any?>) =
-                    System.currentTimeMillis().toDouble() / 1000.0
-                override fun toString() = "<native fn>"
-            },
-        )
-    }
 
     fun interpret(statements: List<Statements>) {
         try {
@@ -30,12 +17,6 @@ class Interpreter {
         } catch (error: LoxRuntimeError) {
             Lox.runtimeError(error)
         }
-    }
-
-    private fun Any?.stringify() = when (this) {
-        null -> "nil"
-        is Double -> if (floor(this) == this) this.toInt().toString() else this.toString()
-        else -> this.toString()
     }
 
     fun evaluate(expr: Expressions): Any? {
@@ -173,10 +154,6 @@ class Interpreter {
                 } else if (statement.elseBranch != null) {
                     execute(statement.elseBranch)
                 }
-            }
-            is Statements.Print -> {
-                val obj = evaluate(statement.expression)
-                println(obj.stringify())
             }
             is Statements.Var -> {
                 val value = if (statement.initializer != null) evaluate(statement.initializer) else null
