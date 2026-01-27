@@ -25,9 +25,9 @@ class Parser(val tokens: List<Token>) {
     private fun declaration(): Statements {
         try {
             if (match(VAR)) return varDeclaration()
+            if (match(FUN)) return funDeclaration()
             /*
             if (match(CLASS)) return classDeclaration()
-            if (match(FUN)) return funDeclaration()
              */
             return statement()
         } catch (_: ParseError) {
@@ -47,15 +47,31 @@ class Parser(val tokens: List<Token>) {
         return Statements.Var(name, initializer)
     }
 
+    private fun funDeclaration(): Statements {
+        val name = consume(IDENTIFIER, "Except function name.")
+        consume(LEFT_PAREN, "Expect '(' after function name.")
+        val parameters: MutableList<Token> = ArrayList()
+        if (!check(RIGHT_PAREN)) {
+            do {
+                if (parameters.size >= 255) {
+                    error(peek(), "Can't have more than 255 parameters.")
+                }
+                parameters.add(consume(IDENTIFIER, "Expect parameter name."))
+            } while (match(COMMA))
+        }
+        consume(RIGHT_PAREN, "Expect ')' after parameters.")
+        consume(LEFT_BRACE, "Expect '{' before function body.")
+        val body = block()
+        return Statements.Function(name, parameters, body)
+    }
+
     // 解析语句部分
     private fun statement(): Statements {
         if (match(IF)) return ifStatement()
         if (match(WHILE)) return whileStatement()
         if (match(FOR)) return forStatement()
-        if (match(LEFT_BRACE)) return Statements.Block(block())
-        /*
         if (match(RETURN)) return returnStatement()
-         */
+        if (match(LEFT_BRACE)) return Statements.Block(block())
         return expressionStatement()
     }
 
@@ -103,6 +119,13 @@ class Parser(val tokens: List<Token>) {
             body
         }
         return statement
+    }
+
+    private fun returnStatement(): Statements {
+        val keyword = previous()
+        val value = if (!check(SEMICOLON)) expression() else null
+        consume(SEMICOLON, "Expect ';' after return value.")
+        return Statements.Return(keyword, value)
     }
 
     private fun block(): List<Statements> {
@@ -247,7 +270,7 @@ class Parser(val tokens: List<Token>) {
                 if (arguments.size >= MAX_PARAMETERS) {
                     error(peek(), "Can't have more than $MAX_PARAMETERS arguments.")
                 }
-                arguments.add(expression())
+                arguments.add(assignment())
             } while (match(COMMA))
         }
 

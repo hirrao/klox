@@ -11,7 +11,7 @@ fun Interpreter.defineNativeFunction(name: String, arity: Int, fn: (Interpreter,
 
 fun createNativeFunction(arity: Int, fn: (Interpreter, List<Any?>) -> Any?) = object : LoxCallable {
     override val arity = arity
-    override fun call(interpreter: Interpreter, arguments: List<Any?>) = fn(interpreter, arguments)
+    override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? = fn(interpreter, arguments)
     override fun toString() = "<native fn>"
 }
 

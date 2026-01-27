@@ -50,6 +50,7 @@ term           -> factor ( ( "-" | "+" ) factor )* ;
 factor         -> unary ( ( "/" | "*" ) unary )* ;
 unary          -> ( "!" | "-" ) unary | call ;
 call           -> primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
+arguments      -> assignment
 primary        -> "true" | "false" | "nil" | "this"
 | NUMBER | STRING | IDENTIFIER | "(" expression ")"
 | "super" "." IDENTIFIER ;
