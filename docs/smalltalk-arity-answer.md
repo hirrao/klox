@@ -48,7 +48,7 @@ In our Lox interpreter:
 
 1. Functions have names independent of their parameter count
 2. You can define `function add(a, b)` and still try to call `add(1, 2, 3)`
-3. We must check at runtime: `if (arguments.size != function.arity)` (see `Interpreter.kt`, lines 90-97)
+3. We must check at runtime: `if (arguments.size != function.arity)` (see `Interpreter.kt`, lines 90-100)
 4. This check happens on **every function call**, adding overhead
 
 ### Performance Impact
@@ -61,7 +61,7 @@ The Smalltalk design makes arity mismatches a **static** property that's caught 
 ## Related Code
 
 The runtime arity check in our interpreter can be found in:
-- `/src/main/kotlin/com/hirrao/klox/interpreter/Interpreter.kt` (lines 90-97)
+- `/src/main/kotlin/com/hirrao/klox/interpreter/Interpreter.kt` (lines 90-100)
 - The `arity` property is defined in `/src/main/kotlin/com/hirrao/klox/interpreter/LoxCallable.kt`
 
 ## References
