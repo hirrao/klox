@@ -26,4 +26,21 @@ class LoxFunction(val declaration: Statements.Function, val closure: Environment
     override fun toString() = "<fn ${declaration.name.lexeme}>"
 }
 
+class LoxAnonymousFunction(val params: List<Token>, val body: List<Statements>, val closure: Environment) :
+    LoxCallable {
+    override val arity: Int = params.size
+    override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
+        val environment = Environment(closure)
+        params.forEachIndexed { index, token -> environment.define(token.lexeme, arguments[index]) }
+        try {
+            interpreter.execute(Statements.Block(body), environment)
+        } catch (value: Return) {
+            return value.value
+        }
+        return null
+    }
+
+    override fun toString() = "<fn>"
+}
+
 data class Return(val value: Any?, val token: Token) : RuntimeException(null, null, false, false)

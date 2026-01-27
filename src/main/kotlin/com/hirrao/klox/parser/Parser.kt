@@ -49,18 +49,7 @@ class Parser(val tokens: List<Token>) {
 
     private fun funDeclaration(): Statements {
         val name = consume(IDENTIFIER, "Except function name.")
-        consume(LEFT_PAREN, "Expect '(' after function name.")
-        val parameters: MutableList<Token> = ArrayList()
-        if (!check(RIGHT_PAREN)) {
-            do {
-                if (parameters.size >= 255) {
-                    error(peek(), "Can't have more than 255 parameters.")
-                }
-                parameters.add(consume(IDENTIFIER, "Expect parameter name."))
-            } while (match(COMMA))
-        }
-        consume(RIGHT_PAREN, "Expect ')' after parameters.")
-        consume(LEFT_BRACE, "Expect '{' before function body.")
+        val parameters = consumeArgs()
         val body = block()
         return Statements.Function(name, parameters, body)
     }
@@ -292,7 +281,30 @@ class Parser(val tokens: List<Token>) {
             consume(RIGHT_PAREN, "Expect ')' after expression.")
             return Expressions.Grouping(expr)
         }
+        if (match(FUN)) return anonymous()
         throw error(peek(), "Expect expression.")
+    }
+
+    private fun anonymous(): Expressions {
+        val parameters = consumeArgs()
+        val body = block()
+        return Expressions.AnonymousFunction(parameters, body)
+    }
+
+    private fun consumeArgs(): List<Token> {
+        consume(LEFT_PAREN, "Expect '(' after function name.")
+        val parameters: MutableList<Token> = ArrayList()
+        if (!check(RIGHT_PAREN)) {
+            do {
+                if (parameters.size >= 255) {
+                    error(peek(), "Can't have more than 255 parameters.")
+                }
+                parameters.add(consume(IDENTIFIER, "Expect parameter name."))
+            } while (match(COMMA))
+        }
+        consume(RIGHT_PAREN, "Expect ')' after parameters.")
+        consume(LEFT_BRACE, "Expect '{' before function body.")
+        return parameters
     }
 
     // 工具函数

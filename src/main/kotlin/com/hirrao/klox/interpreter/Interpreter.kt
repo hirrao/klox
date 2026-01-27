@@ -16,12 +16,15 @@ class Interpreter {
         } catch (error: LoxRuntimeError) {
             Lox.runtimeError(error)
         } catch (error: Return) {
-            Lox.runtimeError(LoxRuntimeError(error.token,"Return must be used within a function"))
+            Lox.runtimeError(LoxRuntimeError(error.token, "Return must be used within a function"))
         }
     }
 
     fun evaluate(expr: Expressions, environment: Environment): Any? {
         when (expr) {
+            is Expressions.AnonymousFunction -> {
+                return LoxAnonymousFunction(expr.params, expr.body, environment)
+            }
             is Expressions.Assign -> {
                 val value = evaluate(expr.value, environment)
                 environment[expr.name] = value
@@ -156,7 +159,7 @@ class Interpreter {
                 }
             }
             is Statements.Return -> {
-                throw Return(statement.value?.let { evaluate(it, environment)},statement.keyword)
+                throw Return(statement.value?.let { evaluate(it, environment) }, statement.keyword)
             }
             is Statements.Var -> {
                 val value = if (statement.initializer != null) evaluate(statement.initializer, environment) else null
