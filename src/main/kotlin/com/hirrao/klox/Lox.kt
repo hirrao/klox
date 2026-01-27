@@ -4,6 +4,7 @@ import com.hirrao.klox.initializer.initNativeFunctions
 import com.hirrao.klox.interpreter.Interpreter
 import com.hirrao.klox.interpreter.LoxRuntimeError
 import com.hirrao.klox.parser.Parser
+import com.hirrao.klox.resolver.Resolver
 import com.hirrao.klox.scanner.Scanner
 import com.hirrao.klox.token.Token
 import com.hirrao.klox.token.TokenType
@@ -19,8 +20,13 @@ object Lox {
     var hadError = false
     var hadRuntimeError = false
     val interpreter = Interpreter()
+    val resolver = Resolver()
     init {
         interpreter.initNativeFunctions()
+        // Register native functions with resolver for compile-time arity checking
+        resolver.registerNativeFunction("clock", 0)
+        resolver.registerNativeFunction("print", 1)
+        resolver.registerNativeFunction("println", 1)
     }
 
     fun runFile(path: String) {
@@ -44,6 +50,9 @@ object Lox {
     private fun run(source: String) {
         val scanner = Scanner(source)
         val statements = Parser(scanner.scanTokens()).parse()
+        if (hadError) return
+        // Resolve and validate arity at compile time
+        resolver.resolve(statements)
         if (hadError) return
         interpreter.interpret(statements)
     }

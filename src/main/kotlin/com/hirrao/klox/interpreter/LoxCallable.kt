@@ -5,13 +5,15 @@ const val MAX_PARAMETERS = 32
 /**
  * Interface for callable objects in Lox (functions, classes, etc.).
  *
- * Note: The arity property must be checked at runtime before each call
- * (see Interpreter.kt). This is necessary because in Lox, function names
- * are independent of their parameter count. In contrast, Smalltalk avoids
- * this runtime overhead because method names include the parameter count
- * (e.g., "at:put:" has 2 parameters by definition).
+ * Note: As of the latest implementation, arity checking is performed at compile time
+ * by the Resolver (see resolver/Resolver.kt), not at runtime. This eliminates the
+ * performance overhead of validating argument counts on every function call.
  *
- * See docs/smalltalk-arity-answer.md for a detailed explanation.
+ * Previously, the arity property was checked at runtime before each call, which was
+ * necessary because function names are independent of parameter count. The static
+ * analysis approach provides the same safety guarantees without the runtime cost.
+ *
+ * See docs/smalltalk-arity-answer.md for comparison with Smalltalk's approach.
  */
 interface LoxCallable {
     val arity: Int

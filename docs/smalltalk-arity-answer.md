@@ -48,20 +48,33 @@ In our Lox interpreter:
 
 1. Functions have names independent of their parameter count
 2. You can define `function add(a, b)` and still try to call `add(1, 2, 3)`
-3. We must check at runtime: `if (arguments.size != function.arity)` (see `Interpreter.kt`, lines 90-100)
-4. This check happens on **every function call**, adding overhead
+3. **Original implementation**: We checked at runtime: `if (arguments.size != function.arity)` on every call
+4. **Current implementation**: We now use a static resolver that validates arity at compile time
 
 ### Performance Impact
 
-- **Lox**: Requires an explicit comparison on every call: `O(1)` overhead per call
 - **Smalltalk**: Arity is validated during method lookup, which must happen anyway: `O(0)` additional overhead
+- **Lox (original)**: Required an explicit comparison on every call: `O(1)` overhead per call
+- **Lox (current)**: Validates arity once during compilation via static analysis: `O(0)` runtime overhead
 
-The Smalltalk design makes arity mismatches a **static** property that's caught during method resolution, while Lox treats it as a **dynamic** property that must be validated at runtime.
+The Smalltalk design makes arity mismatches impossible to express (wrong arity = different method name). Our improved Lox implementation achieves similar performance by moving the check to compile time, catching errors before the program runs.
+
+## Our Implementation
+
+To eliminate the runtime arity checking overhead, we implemented a **Resolver** that performs static analysis:
+
+1. **Parse phase**: Build the AST from source code
+2. **Resolution phase** (new): Walk the AST and validate function call arity
+3. **Interpretation phase**: Execute the validated code without runtime checks
+
+The resolver tracks all known functions and their arities, then validates each function call during the resolution phase. This catches arity errors at compile time, just like type checking in statically typed languages.
 
 ## Related Code
 
-The runtime arity check in our interpreter can be found in:
-- `/src/main/kotlin/com/hirrao/klox/interpreter/Interpreter.kt` (lines 90-100)
+The compile-time arity checking implementation:
+- `/src/main/kotlin/com/hirrao/klox/resolver/Resolver.kt` - Static analyzer that validates arity
+- `/src/main/kotlin/com/hirrao/klox/Lox.kt` - Integrates resolver into compilation pipeline
+- `/src/main/kotlin/com/hirrao/klox/interpreter/Interpreter.kt` - Runtime check removed
 - The `arity` property is defined in `/src/main/kotlin/com/hirrao/klox/interpreter/LoxCallable.kt`
 
 ## References

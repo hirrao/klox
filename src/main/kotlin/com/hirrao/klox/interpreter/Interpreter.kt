@@ -87,17 +87,9 @@ class Interpreter {
                         expr.paren,
                         "Can only call functions and classes.",
                     )
-                // Runtime arity check - required because Lox function names don't encode parameter count.
-                // Smalltalk avoids this overhead by including arity in method selectors (e.g., "at:put:" has 2 params).
-                // See docs/smalltalk-arity-answer.md for details.
-                if (arguments.size !=
-                    function.arity
-                ) {
-                    throw LoxRuntimeError(
-                        expr.paren,
-                        "Expected ${function.arity} arguments but got ${arguments.size}.",
-                    )
-                }
+                // Arity check moved to compile-time in Resolver.
+                // The resolver validates argument counts during static analysis,
+                // eliminating the runtime overhead of this check.
                 return function.call(this, arguments)
             }
             is Expressions.Grouping -> return evaluate(expr.expression)
