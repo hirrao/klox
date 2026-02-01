@@ -11,6 +11,8 @@ class Environment(val enclosing: Environment? = null) {
         throw LoxRuntimeError(name, "Undefined variable '${name.lexeme}'.")
     }
 
+    operator fun get(distance: Int, name: String) = ancestor(distance).values[name]
+
     operator fun set(name: Token, value: Any?) {
         if (values.containsKey(name.lexeme)) {
             values[name.lexeme] = value
@@ -21,7 +23,19 @@ class Environment(val enclosing: Environment? = null) {
         }
     }
 
+    operator fun set(distance: Int, name: Token, value: Any?) {
+        ancestor(distance).values[name.lexeme] = value
+    }
+
     fun define(name: String, value: Any?) {
         values[name] = value
+    }
+
+    fun ancestor(distance: Int): Environment {
+        var environment: Environment = this
+        repeat(distance) {
+            environment = environment.enclosing!!
+        }
+        return environment
     }
 }

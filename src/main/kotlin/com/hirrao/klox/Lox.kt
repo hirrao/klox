@@ -4,6 +4,7 @@ import com.hirrao.klox.initializer.initNativeFunctions
 import com.hirrao.klox.interpreter.Interpreter
 import com.hirrao.klox.interpreter.LoxRuntimeError
 import com.hirrao.klox.parser.Parser
+import com.hirrao.klox.resolver.Resolver
 import com.hirrao.klox.scanner.Scanner
 import com.hirrao.klox.token.Token
 import com.hirrao.klox.token.TokenType
@@ -44,6 +45,8 @@ object Lox {
     private fun run(source: String) {
         val scanner = Scanner(source)
         val statements = Parser(scanner.scanTokens()).parse()
+        if (hadError) return
+        Resolver(interpreter).resolve(statements)
         if (hadError) return
         interpreter.interpret(statements)
     }

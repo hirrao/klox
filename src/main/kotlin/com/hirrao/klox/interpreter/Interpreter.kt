@@ -9,15 +9,18 @@ import com.hirrao.klox.token.TokenType.*
 
 class Interpreter {
     val globals = Environment()
+    private val locals: MutableMap<Expressions, Int?> = HashMap()
 
     fun interpret(statements: List<Statements>) {
         try {
             statements.forEach { execute(it, globals) }
         } catch (error: LoxRuntimeError) {
             Lox.runtimeError(error)
-        } catch (error: Return) {
-            Lox.runtimeError(LoxRuntimeError(error.token, "Return must be used within a function"))
         }
+    }
+
+    fun resolve(expression: Expressions, depth: Int) {
+        locals[expression] = depth
     }
 
     fun evaluate(expr: Expressions, environment: Environment): Any? {
@@ -27,7 +30,8 @@ class Interpreter {
             }
             is Expressions.Assign -> {
                 val value = evaluate(expr.value, environment)
-                environment[expr.name] = value
+                val distance = locals[expr]
+                if (distance != null) environment[distance, expr.name] = value else globals[expr.name] = value
                 return value
             }
 
@@ -132,7 +136,10 @@ class Interpreter {
                 }
             }
 
-            is Expressions.Variable -> return environment[expr.name]
+            is Expressions.Variable -> {
+                val distance = locals[expr]
+                return if (distance != null) environment[distance, expr.name.lexeme] else globals[expr.name]
+            }
 
             else -> TODO()
         }
@@ -175,10 +182,8 @@ class Interpreter {
         }
     }
 
-    private fun checkNumberOperand(operator: Token, vararg operand: Any?) {
-        for (i in operand) {
-            if (i !is Double) throw LoxRuntimeError(operator, "Operand must be a number.")
-        }
+    private fun checkNumberOperand(operator: Token, vararg operand: Any?) = operand.forEach {
+        if (it !is Double) throw LoxRuntimeError(operator, "Operand must be a number.")
     }
 
     private fun Any?.isTruthy(): Boolean = when (this) {
