@@ -105,6 +105,15 @@ class Interpreter {
                 }
                 return function.call(this, arguments)
             }
+            is Expressions.Get -> {
+                val obj = evaluate(expr.obj, environment)
+                return (
+                    obj as? LoxInstance ?: throw LoxRuntimeError(
+                        expr.name,
+                        "Only instances have properties.",
+                    )
+                    )[expr.name]
+            }
             is Expressions.Grouping -> return evaluate(expr.expression, environment)
             is Expressions.Literal -> return expr.value
             is Expressions.Logical -> {
@@ -115,10 +124,20 @@ class Interpreter {
                 }
                 return evaluate(expr.right, environment)
             }
-
+            is Expressions.Set -> {
+                val obj = evaluate(expr.obj, environment)
+                if (obj !is LoxInstance) throw LoxRuntimeError(expr.name, "Only instances have fields.")
+                val value = evaluate(expr.value, environment)
+                obj[expr.name] = value
+                return value
+            }
             is Expressions.Ternary -> {
                 val left = evaluate(expr.left, environment)
                 return if (left.isTruthy()) evaluate(expr.medium, environment) else evaluate(expr.right, environment)
+            }
+            is Expressions.This -> {
+                val distance = locals[expr]
+                return if (distance != null) environment[distance, expr.keyword.lexeme] else globals[expr.keyword]
             }
             is Expressions.Unary -> {
                 val right = evaluate(expr.right, environment)
@@ -152,6 +171,16 @@ class Interpreter {
                 statement.statements.forEach {
                     execute(it, env)
                 }
+            }
+            is Statements.Class -> {
+                environment.define(statement.name.lexeme, null)
+                val methods: MutableMap<String, LoxFunction> = HashMap()
+                statement.methods.forEach {
+                    val function = LoxFunction(it, environment, it.name.lexeme == "init")
+                    methods[it.name.lexeme] = function
+                }
+                val loxClass = LoxClass(statement.name.lexeme, methods)
+                environment[statement.name] = loxClass
             }
             is Statements.Expression -> evaluate(statement.expression, environment)
             is Statements.Function -> {

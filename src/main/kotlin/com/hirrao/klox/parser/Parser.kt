@@ -26,9 +26,7 @@ class Parser(val tokens: List<Token>) {
         try {
             if (match(VAR)) return varDeclaration()
             if (match(FUN)) return funDeclaration()
-            /*
             if (match(CLASS)) return classDeclaration()
-             */
             return statement()
         } catch (_: ParseError) {
             synchronize()
@@ -36,7 +34,7 @@ class Parser(val tokens: List<Token>) {
         }
     }
 
-    private fun varDeclaration(): Statements {
+    private fun varDeclaration(): Statements.Var {
         val name = consume(IDENTIFIER, "Expect variable name.")
         val initializer = if (match(EQUAL)) {
             expression()
@@ -47,11 +45,22 @@ class Parser(val tokens: List<Token>) {
         return Statements.Var(name, initializer)
     }
 
-    private fun funDeclaration(): Statements {
+    private fun funDeclaration(): Statements.Function {
         val name = consume(IDENTIFIER, "Except function name.")
         val parameters = consumeArgs()
         val body = block()
         return Statements.Function(name, parameters, body)
+    }
+
+    private fun classDeclaration(): Statements {
+        val name = consume(IDENTIFIER, "Expect class name.")
+        consume(LEFT_BRACE, "Expect '{' before class body.")
+        val methods: MutableList<Statements.Function> = ArrayList()
+        while (!check(RIGHT_BRACE) && !isAtEnd()) {
+            methods.add(funDeclaration())
+        }
+        consume(RIGHT_BRACE, "Expect '}' after class body.")
+        return Statements.Class(name, null, methods)
     }
 
     // 解析语句部分
@@ -153,6 +162,8 @@ class Parser(val tokens: List<Token>) {
             if (expr is Expressions.Variable) {
                 val name = expr.name
                 return Expressions.Assign(name, value)
+            } else if (expr is Expressions.Get) {
+                return Expressions.Set(expr.obj, expr.name, value)
             }
             error(equals, "Invalid assignment target.")
         }
@@ -245,6 +256,9 @@ class Parser(val tokens: List<Token>) {
         while (true) {
             if (match(LEFT_PAREN)) {
                 expr = finishCall(expr)
+            } else if (match(DOT)) {
+                val name = consume(IDENTIFIER, "Expect property name after '.'.")
+                expr = Expressions.Get(expr, name)
             } else {
                 break
             }
@@ -274,7 +288,7 @@ class Parser(val tokens: List<Token>) {
         if (match(NUMBER, STRING)) {
             return Expressions.Literal(previous().literal)
         }
-
+        if (match(THIS)) return Expressions.This(previous())
         if (match(IDENTIFIER)) return Expressions.Variable(previous())
         if (match(LEFT_PAREN)) {
             val expr = expression()

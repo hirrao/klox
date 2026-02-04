@@ -10,7 +10,9 @@ interface LoxCallable {
     fun call(interpreter: Interpreter, arguments: List<Any?>): Any?
 }
 
-class LoxFunction(val declaration: Statements.Function, val closure: Environment) : LoxCallable {
+class LoxFunction(val declaration: Statements.Function, val closure: Environment, val isInitializer: Boolean = false) :
+    LoxCallable {
+    override fun toString() = "<fn ${declaration.name.lexeme}>"
     override val arity: Int = declaration.params.size
     override fun call(interpreter: Interpreter, arguments: List<Any?>): Any? {
         val environment = Environment(closure)
@@ -18,12 +20,17 @@ class LoxFunction(val declaration: Statements.Function, val closure: Environment
         try {
             interpreter.execute(Statements.Block(declaration.body), environment)
         } catch (value: Return) {
+            if (isInitializer) return closure[0, "this"]
             return value.value
         }
         return null
     }
 
-    override fun toString() = "<fn ${declaration.name.lexeme}>"
+    fun bind(instance: LoxInstance): LoxFunction {
+        val environment = Environment(closure)
+        environment.define("this", instance)
+        return LoxFunction(declaration, environment, isInitializer)
+    }
 }
 
 class LoxAnonymousFunction(val params: List<Token>, val body: List<Statements>, val closure: Environment) :

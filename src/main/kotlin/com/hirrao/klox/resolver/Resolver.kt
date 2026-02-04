@@ -9,6 +9,7 @@ import com.hirrao.klox.token.Token
 class Resolver(val interpreter: Interpreter) {
     private val scopes = ArrayDeque<MutableMap<String, Boolean>>()
     private var currentFunction = FunctionType.NONE
+    private var currentClass = ClassType.NONE
 
     fun resolve(statements: List<Statements>) {
         statements.forEach { resolve(it) }
@@ -20,6 +21,23 @@ class Resolver(val interpreter: Interpreter) {
                 beginScope()
                 resolve(statement.statements)
                 endScope()
+            }
+            is Statements.Class -> {
+                val classType = currentClass
+                currentClass = ClassType.CLASS
+                declare(statement.name)
+                beginScope()
+                scopes.last()["this"] = true
+                statement.methods.forEach {
+                    resolveFunction(
+                        it.params,
+                        it.body,
+                        if (it.name.lexeme == "init") FunctionType.INITIALIZER else FunctionType.METHOD,
+                    )
+                }
+                define(statement.name)
+                endScope()
+                currentClass = classType
             }
             is Statements.Expression -> {
                 resolve(statement.expression)
@@ -37,6 +55,9 @@ class Resolver(val interpreter: Interpreter) {
             is Statements.Return -> {
                 if (currentFunction == FunctionType.NONE) {
                     Lox.error(statement.keyword, "Can't return from top-level code.")
+                }
+                if (currentFunction == FunctionType.INITIALIZER) {
+                    Lox.error(statement.keyword, "Can't return a value from an initializer.")
                 }
                 if (statement.value != null) resolve(statement.value)
             }
@@ -70,6 +91,9 @@ class Resolver(val interpreter: Interpreter) {
                 resolve(expression.callee)
                 expression.arguments.forEach { resolve(it) }
             }
+            is Expressions.Get -> {
+                resolve(expression.obj)
+            }
             is Expressions.Grouping -> {
                 resolve(expression.expression)
             }
@@ -77,10 +101,23 @@ class Resolver(val interpreter: Interpreter) {
                 resolve(expression.left)
                 resolve(expression.right)
             }
+            is Expressions.Set -> {
+                resolve(expression.value)
+                resolve(expression.obj)
+            }
             is Expressions.Ternary -> {
                 resolve(expression.left)
                 resolve(expression.medium)
                 resolve(expression.right)
+            }
+            is Expressions.This -> {
+                if (currentClass == ClassType.NONE) {
+                    Lox.error(
+                        expression.keyword,
+                        "Can't use 'this' outside of a class.",
+                    )
+                }
+                resolveLocal(expression, expression.keyword)
             }
             is Expressions.Unary -> {
                 resolve(expression.right)
@@ -140,5 +177,12 @@ class Resolver(val interpreter: Interpreter) {
         NONE,
         AnonymousFunction,
         FUNCTION,
+        INITIALIZER,
+        METHOD,
+    }
+
+    private enum class ClassType {
+        NONE,
+        CLASS,
     }
 }
